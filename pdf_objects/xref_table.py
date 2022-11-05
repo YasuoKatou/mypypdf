@@ -4,12 +4,14 @@ from pdf_objects.objects import PdfObject
 
 class XRefTable:
     _objMap = {}
-    _RE_OBJ_NO_NUM = re.compile(r'(?P<START_NO>\d+)\s+(?P<OBJ_NUM>\d+)$')
+    _RE_OBJ_NO_NUM = re.compile(r'(?P<START_NO>\d+)\s+(?P<OBJ_NUM>\d+)\r?$')
+    _RE_XREF = re.compile(r'xref\r?')
+    _RE_TRAILER = re.compile(r'trailer\r?')
     def __init__(self, recs):
         for r in recs.split('\n'):
-            if r == 'xref':
+            if self._RE_XREF.match(r):
                 continue
-            elif r == 'trailer':
+            elif self._RE_TRAILER.match(r):
                 break
             m = self._RE_OBJ_NO_NUM.match(r)
             if m:
@@ -28,6 +30,11 @@ class XRefTable:
         else:
             obj = PdfObject(p, rec.getOffset())
         return obj.getObjectDecoded()
+
+    def getUncompressedObject(self, p, n):
+        obj = self.getObject(p, n, byte_read=True)
+        #print(obj)
+        return obj
 
     def dumpAll(self, p):
         print('dump all start ----------------')
