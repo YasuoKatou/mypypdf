@@ -47,6 +47,9 @@ class MyPdf:
         self._xref_table = XRefTable(self._xref_str)
         self._trailer = Trailer(self._xref_str, isPrint=True)
 
+    def countXref(self):
+        return 0 if self._xref_table == None else self._xref_table.countXref()
+
     def printXref(self):
         self._xref_table.printObjectMap()
 
@@ -101,6 +104,7 @@ if __name__ == '__main__':
     pdf_ver = pdf.read_pdf_version()
     print('pdf version [%d.%d]' % (pdf_ver))
     pdf.read_xref()
+    print('number of references : ' + str(pdf.countXref()))
     #pdf.printXref()
     while True:
         objNo = input('input object no (e:end, l:list): ')

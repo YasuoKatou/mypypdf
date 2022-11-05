@@ -49,4 +49,8 @@ class XRefTable:
     def printObjectMap(self):
         for no, xrefRec in self._objMap.items():
             print('objNo:{:>3}, {}'.format(no, xrefRec.toString()))
+
+    def countXref(self):
+        return len(self._objMap)
+
 #[EOF]
