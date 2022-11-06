@@ -53,7 +53,7 @@ class Decompresses:
     _STREAM_START_BYTES = b'stream\r\n'
     _STREAM_END_BYTES = b'\nendstream'
     def stream(self, content):
-        print(content)
+        #print(content)
         s = content.find(self._STREAM_START_BYTES) + len(self._STREAM_START_BYTES)
         #print(s)
         #print(content.find(self._STREAM_END_BYTES) - s)

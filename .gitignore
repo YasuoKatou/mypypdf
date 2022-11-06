@@ -128,4 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-sample_pdfs/
+pdf_read01.py
+samples/sample*
+samples/*.txt

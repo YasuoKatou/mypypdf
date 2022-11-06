@@ -5,6 +5,7 @@ import re
 from pdf_objects.xref_table import XRefTable
 from pdf_objects.trailer import Trailer
 from pdf_objects.objects import Decompresses
+from pdf_objects.font import Font
 
 class MyPdf:
     _pdf_path = None
@@ -71,28 +72,49 @@ class MyPdf:
                 assert False, "keyword 'startxref...%%EOF$' is not found"
         return pos
 
-    _fontRefs = {}
+    _fonts = {}
     _RE_FONT_REF_MAP = re.compile(r'.*/Font<<(?P<FONT_LIST>[\w\/\-_ ]+)>>.*', flags=re.MULTILINE | re.DOTALL)
-    _RE_FONT_REF = re.compile(r'.*/Font<</(?P<FONT_NAME>\w+)\s+(?P<OBJECT_NO>\d+)\s+(?P<GEN_NUM>\d+)\s+R>>.*', flags=re.MULTILINE | re.DOTALL)
+    _RE_FONT_REF = re.compile(r'/(?P<FONT_NAME>[\w\/\-_]+)\s+(?P<OBJECT_NO>\d+)\s+(?P<GEN_NUM>\d+)\s+R', flags=re.MULTILINE | re.DOTALL)
     def pushFonts(self, s):
         m = self._RE_FONT_REF_MAP.match(s)
         if m:
-            print('hit font map : ' + m.group('FONT_LIST'))
-            #self._fontRefs[m.group('FONT_NAME')] = (int(m.group('OBJECT_NO')), int(m.group('GEN_NUM')))
-            #print('hit font info ' + str(self._fontRefs))
+            fl = m.group('FONT_LIST')
+            #print('hit font map : ' + fl)
+            for m in self._RE_FONT_REF.finditer(fl):
+                fn = m.group('FONT_NAME')
+                font = Font(fn)
+                font.setFontInfo(self.getObject(m.group('OBJECT_NO')))
+                n = font.getToUnicodeRefNo()
+                if n:
+                    r = self.getObject(n)
+                font.setCMap(r)
+                self._fonts['/' + fn] = font
+            #print(str(self._fonts))
 
-    _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
-    def dump_Object(self, objNo):
+    def getObject(self, objNo):
+        if (type(objNo) == str):
+            objNo = int(objNo)
         p = Path(self._pdf_path)
-        s = self._xref_table.getObject(p, objNo)
-        m = self._RE_FILTER_FLATEDECODE.match(s)
+        s1 = self._xref_table.getObject(p, objNo)
+        m = self._RE_FILTER_FLATEDECODE.match(s1)
         if m:
             o = self._xref_table.getUncompressedObject(p, objNo)
             d = self._decomp.stream(o)
-            print('[mypypdf Decompresses]')
-            s = d.decode()
-        print(s)
-        self.pushFonts(s)
+            #print('[mypypdf Decompresses]')
+            s2 = d.decode()
+        else:
+            return (s1, )
+        return (s1, s2)
+
+    _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
+    def dump_Object(self, objNo):
+        wk = self.getObject(objNo)
+        if len(wk) == 1:
+            print(wk[0])
+            self.pushFonts(wk[0])
+        elif len(wk) == 2:
+            print('[mypydf Decompresses')
+            print(wk[1])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='my PDF Reader')
@@ -107,8 +129,8 @@ if __name__ == '__main__':
     print('number of references : ' + str(pdf.countXref()))
     #pdf.printXref()
     while True:
-        objNo = input('input object no (e:end, l:list): ')
-        if objNo == 'e':
+        objNo = input('input object no (q:quit, l:list): ')
+        if objNo == 'q':
             break;
         elif objNo == 'l':
             pdf.printXref()
