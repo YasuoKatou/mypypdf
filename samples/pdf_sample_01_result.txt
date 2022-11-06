@@ -1,0 +1,58 @@
+pdf_read02.py --file-path ./samples/pdf_sample_01.pdf 
+file : pdf_sample_01.pdf, (13,671 bytes)
+pdf version [1.4]
+find xref pos [13,114]
+trailer size : 20
+trailer root : [8 0 R ]
+trailer info : [1 0 R ]
+number of references : 20
+input object no (q:quit, l:list, t:text): 2
+not found [begin/end]range in F5
+2 0 obj
+<</Contents 19 0 R /MediaBox[ 0 0 515 728]/Parent 7 0 R /Resources<</ExtGState<</G3 3 0 R >>/Font<</F4 4 0 R /F5 5 0 R >>/ProcSet[/PDF/Text/ImageB/ImageC/ImageI]>>/StructParents 0/Type/Page>>
+endobj
+
+input object no (q:quit, l:list, t:text): 6
+[mypydf Decompresses]
+1 0 0 -1 0 842 cm
+q
+.75 0 0 .75 0 0 cm
+1 1 1 RG 1 1 1 rg
+/G3 gs
+0 0 794 1123 re
+f
+Q
+q
+.75 0 0 .75 72 144.731323 cm
+/G3 gs
+BT
+/F4 14.666667 Tf
+1 0 0 -1 220.73042 .47981739 Tm
+0 -13.2773438 Td <4743> Tj
+15 0 Td <4781> Tj
+12.9492188 0 Td <4765> Tj
+13.2421875 0 Td <4779> Tj
+15 0 Td <4757> Tj
+10.6054688 0 Td <473B> Tj
+14.4140625 0 Td <4773> Tj
+12.1875 0 Td <476F> Tj
+10.78125 0 Td <4781> Tj
+12.9492188 0 Td <4756> Tj
+ET
+BT
+/F5 14.666667 Tf
+1 0 0 -1 220.73042 .47981739 Tm
+126.855469 -13.2773438 Td <0003> Tj
+ET
+BT
+/F5 14.666667 Tf
+1 0 0 -1 220.73042 .47981739 Tm
+130.927444 -13.2773438 Td <0033> Tj
+9.7756042 0 Td <0027> Tj
+10.5842743 0 Td <0029> Tj
+ET
+Q
+
+input object no (q:quit, l:list, t:text): t
+サンプルドキュメント PDF
+input object no (q:quit, l:list, t:text): q

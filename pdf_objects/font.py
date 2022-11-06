@@ -71,4 +71,12 @@ class Font:
         if c != num:
             print('count miss match. check [begin/end]range {} -> {}'.format(num, c))
 
+    def getChar(self, code):
+        if code in self._cmap_1on1:
+            return self._cmap_1on1[code][1]
+        for rng, b in self._cmap_range.items():
+            if rng[0] <= code and code <= rng[1]:
+                return chr(b + code - rng[0])
+        assert False, '{:04x} is nou found in CMap. font : '.format(code, self._font_name)
+
 #[EOF]

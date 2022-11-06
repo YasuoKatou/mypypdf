@@ -6,6 +6,7 @@ from pdf_objects.xref_table import XRefTable
 from pdf_objects.trailer import Trailer
 from pdf_objects.objects import Decompresses
 from pdf_objects.font import Font
+from pdf_objects.string import String
 
 class MyPdf:
     _pdf_path = None
@@ -91,6 +92,16 @@ class MyPdf:
                 self._fonts['/' + fn] = font
             #print(str(self._fonts))
 
+    _string = String(_fonts)
+    _RE_TEXT_BLOCK_BT = re.compile(r'^BT$', flags=re.MULTILINE)
+    _RE_TEXT_BLOCK_ET = re.compile(r'^ET$', flags=re.MULTILINE)
+    def dump_String(self, s):
+        for mb in self._RE_TEXT_BLOCK_BT.finditer(s):
+            #print('find String block')
+            me = self._RE_TEXT_BLOCK_ET.search(s, mb.end())
+            if me:
+                self._string.pushString(s[mb.start():me.end()])
+
     def getObject(self, objNo):
         if (type(objNo) == str):
             objNo = int(objNo)
@@ -102,18 +113,26 @@ class MyPdf:
             d = self._decomp.stream(o)
             #print('[mypypdf Decompresses]')
             s2 = d.decode()
+            s = s2
+            r = (s1, s2)
         else:
-            return (s1, )
-        return (s1, s2)
+            s = s1
+            r = (s1, )
+
+        self.pushFonts(s)
+        self.dump_String(s)
+        return r
+
+    def printString(self):
+        self._string.printString()
 
     _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
     def dump_Object(self, objNo):
         wk = self.getObject(objNo)
         if len(wk) == 1:
             print(wk[0])
-            self.pushFonts(wk[0])
         elif len(wk) == 2:
-            print('[mypydf Decompresses')
+            print('[mypydf Decompresses]')
             print(wk[1])
 
 if __name__ == '__main__':
@@ -129,12 +148,16 @@ if __name__ == '__main__':
     print('number of references : ' + str(pdf.countXref()))
     #pdf.printXref()
     while True:
-        objNo = input('input object no (q:quit, l:list): ')
+        objNo = input('input object no (q:quit, l:list, t:text): ')
         if objNo == 'q':
             break;
         elif objNo == 'l':
             pdf.printXref()
             continue
+        elif objNo == 't':
+            pdf.printString()
+            continue
+
         pdf.dump_Object(int(objNo))
 
 #[EOF]
