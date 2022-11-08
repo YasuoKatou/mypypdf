@@ -28,7 +28,7 @@
             "console": "integratedTerminal",
             "cwd": "${fileDirname}",
             "args" : [
-                "--file-path", "./samples/pdf_sample_01.pdf",
+                "--file-path", "./samples/pdf_sample_02.pdf",
             ],
         },
     ]

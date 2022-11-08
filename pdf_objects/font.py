@@ -25,22 +25,16 @@ class Font:
     def getToUnicodeRefNo(self):
         return self._toUnicodeRefNo
 
-    _RE_BFCHAR = re.compile(r'.*(?P<ITEM_NUM>\d+)\s+beginbfchar(?P<LIST>.*)endbfchar.*', flags=re.MULTILINE | re.DOTALL)
-    _RE_BFRANGE = re.compile(r'.*(?P<ITEM_NUM>\d+)\s+beginbfrange(?P<LIST>.*)endbfrange.*', flags=re.MULTILINE | re.DOTALL)
+    _RE_BFCHAR = re.compile(r'^(?P<ITEM_NUM>\d+)\s+beginbfchar(?P<LIST>.*?)endbfchar', flags=re.MULTILINE | re.DOTALL)
+    _RE_BFRANGE = re.compile(r'^(?P<ITEM_NUM>\d+)\s+beginbfrange(?P<LIST>.*?)endbfrange', flags=re.MULTILINE | re.DOTALL)
     def setCMap(self, objs):
         i = self._getInfo(objs)
         #print(i)
-        m = self._RE_BFCHAR.match(i)
-        if m:
+        for m in self._RE_BFCHAR.finditer(i):
             self.setCMap1on1(int(m.group('ITEM_NUM')), m.group('LIST'))
-        else:
-            print('not found [begin/end]bfchar in ' + self._font_name)
 
-        m = self._RE_BFRANGE.match(i)
-        if m:
+        for m in self._RE_BFRANGE.finditer(i):
             self.setCMapRange(int(m.group('ITEM_NUM')), m.group('LIST'))
-        else:
-            print('not found [begin/end]range in ' + self._font_name)
 
     _cmap_1on1 = {}
     _RE_1ON1_CODE = re.compile(r'^<(?P<SRC>[0-9A-Fa-f]+)>\s*<(?P<DIST>[0-9A-Fa-f]+)>$', flags=re.MULTILINE)
