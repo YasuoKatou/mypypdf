@@ -7,4 +7,10 @@ class PDFVersionReadException(Exception):
 class PDFKeywordNotFoundException(Exception):
     pass
 
+class PDFDuplicatedObjectException(Exception):
+    pass
+
+class PDFTooManyObjectsException(Exception):
+    pass
+
 #[EOF]

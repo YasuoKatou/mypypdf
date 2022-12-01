@@ -1,6 +1,7 @@
 from .base_class import PDFBase
 from .mypdf_exception import PDFVersionReadException
 from .mypdf_exception import PDFKeywordNotFoundException
+from .cross_reference import CrossReferenceTable
 
 import re
 
@@ -34,21 +35,13 @@ class MyPDF(PDFBase):
         else:
             raise PDFKeywordNotFoundException("keyword 'startxref...%%EOF$' is not found")
 
+    _xref = None
     def _read_xref(self, read_offset):
         u = super().read_binary(-1, offset=read_offset, dec_code='utf-8')
-        print(u)
-        '''
-        p = Path(self._pdf_path)
-        offset = self.read_xref_pos(p)
-        self._xref_str = ''
-        with p.open(mode='rb') as f:
-            f.seek(offset)
-            b = f.read()
-            self._xref_str = b.decode('utf-8', errors='ignore')
-        self._xref_table = XRefTable(self._xref_str)
-        self._trailer = Trailer(self._xref_str, isPrint=True)
-        '''
-
+        #print(u)
+        self._xref = CrossReferenceTable(u)
+        for id, d in self._xref.getXrefAllData().items():
+            print('id:{}, Data:{}'.format(id, d.toString()))
 
     _TO_STR_FMT = '''
 PDF Path:{}
