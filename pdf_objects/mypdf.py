@@ -1,7 +1,8 @@
 from .base_class import PDFBase
 from .mypdf_exception import PDFVersionReadException
 from .mypdf_exception import PDFKeywordNotFoundException
-from .cross_reference import CrossReferenceTable
+from .cross_reference import PDFCrossReferenceTable
+from .root import PDFRoot
 
 import re
 
@@ -12,11 +13,14 @@ class MyPDF(PDFBase):
         super().set_pdf_pass(pdf_path)
         self._pdf_version = self._read_pdf_version()
         pos = self._read_xref_pos()
-        self._read_xref(pos)
+        s = self._read_xref(pos)
+        root_obj_no = self._getRoot(s)
+        #print('/Root:{}'.format(root_obj_no))
+        root = PDFRoot(pdf_path, self._xref.getXrefData(root_obj_no))
 
     _RE_PDF_VERSION = re.compile(r'^%PDF-(?P<MAJOR>\d+)\.(?P<MINOR>\d+).*')
     def _read_pdf_version(self):
-        u = super().read_binary(32, dec_code='utf-8')
+        u = super().read_byte(32, dec_code='utf-8')
         #print(u)
         m = self._RE_PDF_VERSION.match(u)
         if m:
@@ -26,7 +30,7 @@ class MyPDF(PDFBase):
 
     _RE_POS_XREF = re.compile(r'.*startxref\r?\n(?P<POS>\d+)\s*\r?\n%%EOF', flags=re.MULTILINE | re.DOTALL)
     def _read_xref_pos(self):
-        u = super().read_binary(256, offset=-256, dec_code='utf-8')
+        u = super().read_byte(256, offset=-256, dec_code='utf-8')
         m = self._RE_POS_XREF.match(u)
         if m:
             pos = int(m.group('POS'))
@@ -37,11 +41,19 @@ class MyPDF(PDFBase):
 
     _xref = None
     def _read_xref(self, read_offset):
-        u = super().read_binary(-1, offset=read_offset, dec_code='utf-8')
+        u = super().read_byte(-1, offset=read_offset, dec_code='utf-8')
         #print(u)
-        self._xref = CrossReferenceTable(u)
-        for id, d in self._xref.getXrefAllData().items():
-            print('id:{}, Data:{}'.format(id, d.toString()))
+        self._xref = PDFCrossReferenceTable(u)
+        #for id, d in self._xref.getXrefAllData().items():
+        #    print('id:{}, Data:{}'.format(id, d.toString()))
+        return u
+
+    _RE_ROOT_XREF = re.compile(r'.*/Root\s+(?P<ROOT>\d+)\s+\d+\s+R.*', flags=re.MULTILINE | re.DOTALL)
+    def _getRoot(self, s):
+        m = self._RE_ROOT_XREF.match(s)
+        if not m:
+            raise PDFKeywordNotFoundException('[/Root] not found')
+        return int(m.group('ROOT'))
 
     _TO_STR_FMT = '''
 PDF Path:{}
