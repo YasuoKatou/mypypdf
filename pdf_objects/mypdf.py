@@ -14,9 +14,8 @@ class MyPDF(PDFBase):
         self._pdf_version = self._read_pdf_version()
         pos = self._read_xref_pos()
         s = self._read_xref(pos)
-        root_obj_no = self._getRoot(s)
-        #print('/Root:{}'.format(root_obj_no))
-        root = PDFRoot(pdf_path, self._xref.getXrefData(root_obj_no))
+        obj_id = self._getRoot(s)
+        root = PDFRoot(pdf_path, self._xref.getXrefData(obj_id))
 
     _RE_PDF_VERSION = re.compile(r'^%PDF-(?P<MAJOR>\d+)\.(?P<MINOR>\d+).*')
     def _read_pdf_version(self):

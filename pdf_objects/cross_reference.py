@@ -1,30 +1,25 @@
 import re
 
+from .xref_record import XRefRecord
 from .mypdf_exception import PDFKeywordNotFoundException
 from .mypdf_exception import PDFDuplicatedObjectException
 from .mypdf_exception import PDFObjectNotFoundException
 
-class XRefData:
-    _offset = None
-    _gen = None
-    _flag = None
-    def __init__(self, m):
-        self._offset = int(m.group('OFFSET'))
-        self._gen = int(m.group('GEN'))
-        self.flag = m.group('FLAG')
+class _Singleton(object):
+    def __new__(cls, *args, **kargs):
+        if not hasattr(cls, "_instance"):
+            cls._instance = super(_Singleton, cls).__new__(cls)
+        return cls._instance
 
-    def getOffset(self):
-        return self._offset
+class PDFCrossReferenceTable(_Singleton):
 
-    def toString(self):
-        return 'flag:{}, gen:{}, offset:{:,}'.format(self.flag, self._gen, self._offset)
-
-class PDFCrossReferenceTable:
     _xref = {}
     _RE_XREF = re.compile(r'.?^xref\r?\n?(?P<BODY>.*)\r?\n?trailer.*', flags=re.MULTILINE | re.DOTALL)
     _RE_INDEX = re.compile(r'(?P<START>\d+)\s+(?P<NUM>\d+)$')
     _RE_DATA = re.compile(r'(?P<OFFSET>\d+)\s+(?P<GEN>\d+)\s+(?P<FLAG>\w{1})$')
-    def __init__(self, source):
+    def __init__(self, source = None):
+        if not source:
+            return
         m = self._RE_XREF.match(source)
         if not m:
             raise PDFKeywordNotFoundException('none xref ...')
@@ -47,7 +42,7 @@ class PDFCrossReferenceTable:
                 if obj_count < 0:
                     raise PDFTooManyObjectsException('')
                 if obj_no not in self._xref.keys():
-                    self._xref[obj_no] = XRefData(m)
+                    self._xref[obj_no] = XRefRecord(l, len_check=False)
                     obj_no += 1
                 else:
                     raise PDFDuplicatedObjectException('already object [{}]'.format(l))
