@@ -8,6 +8,7 @@ import re
 
 class MyPDF(PDFBase):
     _pdf_version = None
+    _root = None
     def __init__(self, pdf_path):
         super().__init__()
         super().set_pdf_pass(pdf_path)
@@ -15,7 +16,7 @@ class MyPDF(PDFBase):
         pos = self._read_xref_pos()
         s = self._read_xref(pos)
         obj_id = self._getRoot(s)
-        root = PDFRoot(pdf_path, self._xref.getXrefData(obj_id))
+        self._root = PDFRoot(pdf_path, self._xref.getXrefData(obj_id))
 
     _RE_PDF_VERSION = re.compile(r'^%PDF-(?P<MAJOR>\d+)\.(?P<MINOR>\d+).*')
     def _read_pdf_version(self):
@@ -57,9 +58,11 @@ class MyPDF(PDFBase):
     _TO_STR_FMT = '''
 PDF Path:{}
 \tfile size  : {:,} bytes
-\tpdf version: {}.{}'''
+\tpdf version: {}.{}
+\tpages      : {:,}'''
     def toString(self):
         p = self._pdf_path
         return self._TO_STR_FMT.format(p.resolve(), p.stat().st_size
-                                     , self._pdf_version[0], self._pdf_version[1])
+                                     , self._pdf_version[0], self._pdf_version[1]
+                                     , self._root.getPageCount())
 #[EOF]

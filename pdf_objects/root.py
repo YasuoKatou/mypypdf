@@ -20,4 +20,6 @@ class PDFRoot(PDFBase):
             raise PDFKeywordNotFoundException('[/Pages] not found')
         return int(m.group('PAGES'))
 
+    def getPageCount(self):
+        return self._pages.getPageCount()
 #[EOF]
