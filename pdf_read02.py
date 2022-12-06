@@ -5,7 +5,7 @@ import re
 from pdf_objects.xref_table import XRefTable
 from pdf_objects.trailer import Trailer
 from pdf_objects.objects import Decompresses
-from pdf_objects.font import Font
+from pdf_objects.font_prot import Font
 from pdf_objects.string import String
 
 class MyPdf:
@@ -55,7 +55,7 @@ class MyPdf:
     def printXref(self):
         self._xref_table.printObjectMap()
 
-    _RE_POS_XREF = re.compile(r'.*startxref\r?\n(?P<POS>\d+)\r?\n%%EOF', flags=re.MULTILINE | re.DOTALL)
+    _RE_POS_XREF = re.compile(r'.*startxref\r?\n(?P<POS>\d+)\s*\r?\n%%EOF', flags=re.MULTILINE | re.DOTALL)
     def read_xref_pos(self, p):
         file_size = p.stat().st_size
         pos = -1
@@ -74,7 +74,7 @@ class MyPdf:
         return pos
 
     _fonts = {}
-    _RE_FONT_REF_MAP = re.compile(r'.*/Font<<(?P<FONT_LIST>[\w\/\-_ ]+)>>.*', flags=re.MULTILINE | re.DOTALL)
+    _RE_FONT_REF_MAP = re.compile(r'.*/Font\s?<<\n?(?P<FONT_LIST>[\w\/\-_ ]+)\n?>>.*', flags=re.MULTILINE | re.DOTALL)
     _RE_FONT_REF = re.compile(r'/(?P<FONT_NAME>[\w\/\-_]+)\s+(?P<OBJECT_NO>\d+)\s+(?P<GEN_NUM>\d+)\s+R', flags=re.MULTILINE | re.DOTALL)
     def pushFonts(self, s):
         m = self._RE_FONT_REF_MAP.match(s)
@@ -126,7 +126,7 @@ class MyPdf:
     def printString(self):
         self._string.printString()
 
-    _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
+    _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter\s*/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
     def dump_Object(self, objNo):
         wk = self.getObject(objNo)
         if len(wk) == 1:

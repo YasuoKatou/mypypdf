@@ -50,11 +50,20 @@ class PdfObject:
         return b
 
 class Decompresses:
-    _STREAM_START_BYTES = b'stream\r\n'
+    _STREAM_START_BYTES1 = b'stream\r\n'
+    _STREAM_START_BYTES2 = b'stream\n'
     _STREAM_END_BYTES = b'\nendstream'
     def stream(self, content):
         #print(content)
-        s = content.find(self._STREAM_START_BYTES) + len(self._STREAM_START_BYTES)
+        s1 = content.find(self._STREAM_START_BYTES1)
+        if s1 != -1:
+            s = s1 + len(self._STREAM_START_BYTES1)
+        else:
+            s1 = content.find(self._STREAM_START_BYTES2)
+            if s1 != -1:
+                s = s1 + len(self._STREAM_START_BYTES2)
+            else:
+                assert False, 'not found stream'
         #print(s)
         #print(content.find(self._STREAM_END_BYTES) - s)
         zs = content[s:content.find(self._STREAM_END_BYTES)]
@@ -65,7 +74,9 @@ class Decompresses:
 if __name__ == '__main__':
     from pathlib import Path
 
-    p = Path('../../pdfrw01/sample001_pdf.pdf')
-    obj = PdfObject(p, 11592)
-    print(obj.getObjectDecoded())
+    p = Path('../samples/pdf_sample_01.pdf')
+    obj = PdfObject(p, 670)
+    #print(obj.getObjectDecoded())
+    deco = Decompresses()
+    print(deco.stream(obj.readBytes(p, 670)))
 #[EOF]
