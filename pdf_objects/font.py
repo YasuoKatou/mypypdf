@@ -29,7 +29,8 @@ class PDFFont:
         #print('ToUnicode id:{}'.format(id))
         s = self._read_tounicode(id)
         o = self._getCMap1on1(s)
-        return {'CMap1': o}
+        r = self._getCMapRange(s)
+        return {'CMap1': o, 'CMapRange': r}
 
     _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter\s*/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
     def _read_tounicode(self, obj_id):
@@ -60,5 +61,41 @@ class PDFFont:
         if c != n:
             raise PDFRecordObjectsMissmatchException('[begin/end]bfchar {} -> {}'.format(n, c))
         return cmap_1on1
+
+    _RE_BFRANGE = re.compile(r'.*(?P<ITEM_NUM>\d+)\s+beginbfrange(?P<LIST>.*?)endbfrange.*', flags=re.MULTILINE | re.DOTALL)
+    _RE_RANGE1_CODE = re.compile(r'^<(?P<START>[0-9A-Fa-f]+)>\s*<(?P<END>[0-9A-Fa-f]+)>\s*<(?P<BASE>[0-9A-Fa-f]+)>$', flags=re.MULTILINE)
+    _RE_RANGE2_CODE = re.compile(r'^<(?P<START>[0-9A-Fa-f]+)>\s*<(?P<END>[0-9A-Fa-f]+)>\s*\[(?P<LIST>.*)\].*', flags=re.MULTILINE)
+    _RE_RANGE2_CODES = re.compile(r'<(?P<CODE>[0-9A-Fa-f]+)>')
+    def _getCMapRange(self, source):
+        m = self._RE_BFRANGE.match(source)
+        if not m:
+            return None
+        #print(m.group('LIST'))
+        cmap_range = {}
+        n = int(m.group('ITEM_NUM'))
+        l = m.group('LIST')
+        c = 0
+        for m in self._RE_RANGE1_CODE.finditer(l):
+            s = int(m.group('START'), 16)
+            e = int(m.group('END'), 16)
+            b = int(m.group('BASE'), 16)
+            #print('{:04x} {:04x} -> {:04x} [{}]'.format(s, e, b, chr(b)))
+            cmap_range[(s, e)] = b
+            c += 1
+        for m in self._RE_RANGE2_CODE.finditer(l):
+            s = int(m.group('START'), 16)
+            e = int(m.group('END'), 16)
+            l2 = m.group('LIST')
+            codes = []
+            cs = ''
+            for m2 in self._RE_RANGE2_CODES.finditer(l2):
+                b = int(m2.group('CODE'), 16)
+                codes.append(b)
+                cs += chr(b)
+            #print('{:04x} {:04x} -> [{}]'.format(s, e, cs))
+            c += 1
+        if c != n:
+            raise PDFRecordObjectsMissmatchException('[begin/end]range {} -> {}'.format(n, c))
+        return cmap_range
 
 #[EOF]

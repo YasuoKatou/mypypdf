@@ -13,10 +13,10 @@
             "console": "integratedTerminal",
             "cwd": "${fileDirname}",
             "args" : [
-                "--file-path", "../sample_pdfs/sample001_pdf.pdf",
+                "--file-path", "../samples/pdf_sample_01.pdf",
                 "--limit", "-1",
-                "--offset", "16595",
-                "--plain-text", "utf-8",
+                "--offset", "0",
+                "--plain-text", "",
             ],
         },
 
@@ -28,7 +28,7 @@
             "console": "integratedTerminal",
             "cwd": "${fileDirname}",
             "args" : [
-                "--file-path", "./samples/pdf_sample_02.pdf",
+                "--file-path", "./samples/pdf_sample_01.pdf",
             ],
         },
     ]
