@@ -1,17 +1,17 @@
 import re
-from .base_class import PDFBase
+from .pdf_reader import PDFReader
 from .pages import PDFPages
 
-class PDFRoot(PDFBase):
+class PDFRoot:
     _pages = None
-    def __init__(self, pdf_path, xref_data):
-        super().set_pdf_pass(pdf_path)
+    def __init__(self, xref_data):
         #print('/Root:{}'.format(xref_data.toString()))
-        s = super().read_object(xref_data.getOffset(), dec_code='utf-8')
+        reader = PDFReader()
+        s = reader.read_object(xref_data.getOffset(), dec_code='utf-8')
         #print(s)
         obj_id = self._getPages(s)
         #print('Pages Object id:{}'.format(obj_id))
-        self._pages = PDFPages(pdf_path, obj_id)
+        self._pages = PDFPages(obj_id)
 
     _RE_PAGES = re.compile(r'.*/Pages\s+(?P<PAGES>\d+)\s+\d+\s+R.*', flags=re.MULTILINE | re.DOTALL)
     def _getPages(self, s):

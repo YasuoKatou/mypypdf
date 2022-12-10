@@ -1,26 +1,27 @@
-from .base_class import PDFBase
+from .pdf_reader import PDFReader
+from .root import PDFRoot
 from .mypdf_exception import PDFVersionReadException
 from .mypdf_exception import PDFKeywordNotFoundException
 from .cross_reference import PDFCrossReferenceTable
-from .root import PDFRoot
 
 import re
 
-class MyPDF(PDFBase):
+class MyPDF:
     _pdf_version = None
     _root = None
+    _reader = None
     def __init__(self, pdf_path):
-        super().__init__()
-        super().set_pdf_pass(pdf_path)
+        self._reader = PDFReader()
+        self._reader.set_pdf_pass(pdf_path)
         self._pdf_version = self._read_pdf_version()
         pos = self._read_xref_pos()
         s = self._read_xref(pos)
         obj_id = self._getRoot(s)
-        self._root = PDFRoot(pdf_path, self._xref.getXrefData(obj_id))
+        self._root = PDFRoot(self._xref.getXrefData(obj_id))
 
     _RE_PDF_VERSION = re.compile(r'^%PDF-(?P<MAJOR>\d+)\.(?P<MINOR>\d+).*')
     def _read_pdf_version(self):
-        u = super().read_byte(32, dec_code='utf-8')
+        u = self._reader.read_byte(32, dec_code='utf-8')
         #print(u)
         m = self._RE_PDF_VERSION.match(u)
         if m:
@@ -28,9 +29,9 @@ class MyPDF(PDFBase):
         else:
             raise PDFVersionReadException('PDF version is not found')
 
-    _RE_POS_XREF = re.compile(r'.*startxref\r?\n(?P<POS>\d+)\s*\r?\n%%EOF', flags=re.MULTILINE | re.DOTALL)
+    _RE_POS_XREF = re.compile(r'.*startxref(?P<POS>\d+)\s*%%EOF')
     def _read_xref_pos(self):
-        u = super().read_byte(256, offset=-256, dec_code='utf-8')
+        u = self._reader.read_byte(256, offset=-256, dec_code='utf-8', ignore_newline=True)
         m = self._RE_POS_XREF.match(u)
         if m:
             pos = int(m.group('POS'))
@@ -41,7 +42,7 @@ class MyPDF(PDFBase):
 
     _xref = None
     def _read_xref(self, read_offset):
-        u = super().read_byte(-1, offset=read_offset, dec_code='utf-8')
+        u = self._reader.read_byte(-1, offset=read_offset, dec_code='utf-8')
         #print(u)
         self._xref = PDFCrossReferenceTable(u)
         #for id, d in self._xref.getXrefAllData().items():
@@ -61,7 +62,7 @@ PDF Path:{}
 \tpdf version: {}.{}
 \tpages      : {:,}'''
     def toString(self):
-        p = self._pdf_path
+        p = self._reader.getPdfPath()
         return self._TO_STR_FMT.format(p.resolve(), p.stat().st_size
                                      , self._pdf_version[0], self._pdf_version[1]
                                      , self._root.getPageCount())

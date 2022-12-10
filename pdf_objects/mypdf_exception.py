@@ -16,4 +16,7 @@ class PDFDuplicatedObjectException(Exception):
 class PDFTooManyObjectsException(Exception):
     pass
 
+class PDFRecordObjectsMissmatchException(Exception):
+    pass
+
 #[EOF]
