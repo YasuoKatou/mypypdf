@@ -20,27 +20,18 @@ class PDFFont:
     _RE_TO_UNICODE = re.compile(r'.*/ToUnicode\s+(?P<OBJECT_ID>\d+)\s+(?P<GEN_NUM>\d+)\s+R.*')
     def _readFontInfo(self, obj_id):
         d = self._xref.getXrefData(obj_id)
-        s = self._reader.read_object(d.getOffset(), dec_code='utf-8', ignore_newline=True)
+        s = self._reader.read_object(d.getOffset(), ignore_newline=True)
         #print(s)
         m = self._RE_TO_UNICODE.match(s)
         if not m :
             raise PDFKeywordNotFoundException('[/ToUnicode] not found in Font')
         id = int(m.group('OBJECT_ID'))
         #print('ToUnicode id:{}'.format(id))
-        s = self._read_tounicode(id)
+        d = self._xref.getXrefData(id)
+        s = self._reader.read_object(d.getOffset(), ignore_newline=False)
         o = self._getCMap1on1(s)
         r = self._getCMapRange(s)
         return {'CMap1': o, 'CMapRange': r}
-
-    _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter\s*/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
-    def _read_tounicode(self, obj_id):
-        d = self._xref.getXrefData(obj_id)
-        s = self._reader.read_object(d.getOffset(), dec_code='utf-8', ignore_newline=False)
-        m = self._RE_FILTER_FLATEDECODE.match(s)
-        if m:
-            s = self._reader.read_uncompressed_object(d.getOffset())
-            #print('todo Uncompress !!')
-        return s
 
     _RE_BFCHAR = re.compile(r'.*(?P<ITEM_NUM>\d+)\s+beginbfchar(?P<LIST>.*?)endbfchar.*', flags=re.MULTILINE | re.DOTALL)
     _RE_1ON1_CODE = re.compile(r'^<(?P<SRC>[0-9A-Fa-f]+)>\s*<(?P<DIST>[0-9A-Fa-f]+)>$', flags=re.MULTILINE)

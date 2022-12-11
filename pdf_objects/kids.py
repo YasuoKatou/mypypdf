@@ -28,7 +28,7 @@ class PDFKids:
             #print(m.group('OBJ_ID'))
             obj_id = int(m.group('OBJ_ID'))
             d = xref.getXrefData(obj_id)
-            s = reader.read_object(d.getOffset(), dec_code='utf-8', ignore_newline=True)
+            s = reader.read_object(d.getOffset(), ignore_newline=True)
             #print(s)
 
             m = self._RE_FONT_KEYWD.match(s)
@@ -40,7 +40,7 @@ class PDFKids:
                 if m:
                     obj_id = int(m.group('OBJ_ID'))
                     d = xref.getXrefData(obj_id)
-                    w = reader.read_object(d.getOffset(), dec_code='utf-8', ignore_newline=True)
+                    w = reader.read_object(d.getOffset(), ignore_newline=True)
                     m = self._RE_FONT_KEYWD.match(w)
                     if m:
                         fo = PDFFont(m.group('FONT_OBJS'))

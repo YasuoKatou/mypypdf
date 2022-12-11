@@ -7,7 +7,7 @@ class PDFRoot:
     def __init__(self, xref_data):
         #print('/Root:{}'.format(xref_data.toString()))
         reader = PDFReader()
-        s = reader.read_object(xref_data.getOffset(), dec_code='utf-8')
+        s = reader.read_object(xref_data.getOffset())
         #print(s)
         obj_id = self._getPages(s)
         #print('Pages Object id:{}'.format(obj_id))

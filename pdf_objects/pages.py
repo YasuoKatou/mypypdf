@@ -10,7 +10,7 @@ class PDFPages:
         reader = PDFReader()
         xref = PDFCrossReferenceTable()
         d = xref.getXrefData(obj_id)
-        s = reader.read_object(d.getOffset(), dec_code='utf-8', ignore_newline=True)
+        s = reader.read_object(d.getOffset(), ignore_newline=True)
         #print(s)
         self._getCount(s)
         self._kids = PDFKids(s)

@@ -81,8 +81,9 @@ class PDFReader(_Singleton):
         return None
 
 
+    _RE_FILTER_FLATEDECODE = re.compile(r'.*/Filter\s*/FlateDecode.*', flags=re.MULTILINE | re.DOTALL)
     _END_OBJ_BYTES = b'endobj'
-    def read_object(self, offset, dec_code = None, dec_error = 'ignore', ignore_newline = False):
+    def read_object(self, offset, ignore_newline = False, decomp = True):
         b = b''
         with self._pdf_path.open(mode='rb') as f:
             f.seek(offset)
@@ -94,15 +95,21 @@ class PDFReader(_Singleton):
                     b = b[:idx+len(self._END_OBJ_BYTES)]
                     break
         #print(b)
-        if dec_code:
-            if ignore_newline:
-                return self._RE_NEWLINE.sub('', b.decode(dec_code, errors=dec_error))
-            return b.decode(dec_code, errors=dec_error)
-        else:
+        if not decomp:
             return b
+        dec_code = 'utf-8'
+        dec_error = 'ignore'
+        s = b.decode(dec_code, errors=dec_error)
+        if decomp:
+            m = self._RE_FILTER_FLATEDECODE.match(s)
+            if m:
+                s = self._read_uncompressed_object(offset)
+        if ignore_newline:
+            return self._RE_NEWLINE.sub('', s)
+        return s
 
-    def read_uncompressed_object(self, offset, ignore_newline = False):
-        b = self.read_object(offset)
+    def _read_uncompressed_object(self, offset, ignore_newline = False):
+        b = self.read_object(offset, decomp = False)
         d = self._decomp.stream(b)
         s = d.decode('utf-8', errors='ignore')
         if ignore_newline:
