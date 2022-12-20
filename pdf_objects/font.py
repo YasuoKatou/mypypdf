@@ -89,4 +89,19 @@ class PDFFont:
             raise PDFRecordObjectsMissmatchException('[begin/end]range {} -> {}'.format(n, c))
         return cmap_range
 
+    def getUtf8(self, font_name, code):
+        f = self._font_info['/' + font_name]
+        if f['CMap1']:
+            for c, v in f['CMap1'].items():
+                if c == code:
+                    return v[1]
+
+        if f['CMapRange']:
+            for c, v in f['CMapRange'].items():
+                if (c[0] <= code) and (code <= c[1]):
+                    return chr(code - c[0] + v)
+
+        raise PDFKeywordNotFoundException('character {:04x} not found in /{}'.format(code, font_name))
+        #return '.'
+
 #[EOF]

@@ -22,4 +22,7 @@ class PDFRoot:
 
     def getPageCount(self):
         return self._pages.getPageCount()
+
+    def showPageString(self, page_no):
+        self._pages.showPageString(1)
 #[EOF]

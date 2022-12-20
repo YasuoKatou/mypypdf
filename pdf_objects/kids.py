@@ -53,5 +53,10 @@ class PDFKids:
             #print('Contents id {}'.format(m.group('OBJ_ID')))
             co = PDFContents(int(m.group('OBJ_ID')))
 
-            self._kids.append({'font': fo, 'ccontents': co})
+            self._kids.append({'font': fo, 'contents': co})
+
+    def showPageString(self, page_no):
+        o = self._kids[page_no - 1]
+        o['contents'].showPageString(o['font'])
+
 #[EOF]

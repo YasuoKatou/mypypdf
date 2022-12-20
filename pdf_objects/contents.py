@@ -9,10 +9,10 @@ class CharInfo:
         self._code = int(m.group('CODE'), 16)
         print('x:{}, y:{}, code:{:04x}'.format(self._x, self._y, self._code))
 
+    def getCode(self):
+        return self._code
+
 class StringBlock:
-    _font_name = None
-    _tm = None
-    _chars = []
     _RE_TEXT_TF = re.compile(r'/(?P<FONT_NAME>[\w\d]+)\s+\d+\.*\d*\s+Tf')
     _RE_TEXT_TM = re.compile(r'(?P<A>[\-\d\.]+)\s+(?P<B>[\-\d\.]+)\s+(?P<C>[\-\d\.]+)\s+(?P<D>[\-\d\.]+)\s+(?P<E>[\-\d\.]+)\s+(?P<F>[\-\d\.]+)\s+Tm')
     _RE_TEXT_TD_TJ = re.compile(r'(?P<X>[\-\d\.]+)\s+(?P<Y>[\-\d\.]+)\s+Td\s+<(?P<CODE>[0-9A-Fa-f]+)>\s+Tj')
@@ -31,8 +31,15 @@ class StringBlock:
                 self._tm[0], self._tm[1], self._tm[2],
                 self._tm[3], self._tm[4], self._tm[5]
             ))
+        self._chars = []
         for m in self._RE_TEXT_TD_TJ.finditer(b):
             self._chars.append(CharInfo(m))
+
+    def editString(self, font):
+        s = ''
+        for c in self._chars:
+            s += font.getUtf8(self._font_name, c.getCode())
+        return s
 
 class PDFContents:
     _reader = PDFReader()
@@ -40,6 +47,7 @@ class PDFContents:
     _RE_OBJECTS = re.compile(r'.*obj\r?\n?\[(?P<LIST>.+)\]\r?\n?endobj.*', flags=re.MULTILINE | re.DOTALL)
     _RE_OBJECT_REF = re.compile(r'(?P<OBJECT_ID>\d+)\s+(?P<GEN_NUM>\d+)\s+R')
     def __init__(self, obj_id):
+        self._str_block = []
         d = self._xref.getXrefData(obj_id)
         s = self._reader.read_object(d.getOffset(), ignore_newline=False)
         m = self._RE_OBJECTS.match(s)
@@ -54,11 +62,16 @@ class PDFContents:
         s = self._reader.read_object(d.getOffset(), ignore_newline=False)
         self._getString(d.getOffset(), s)
 
-    _str_block = []
     _RE_TEXT_BLOCK = re.compile(r'^BT\n(?P<BODY>.*?)^ET\n?', flags=re.MULTILINE | re.DOTALL)
     def _getString(self, offset, source):
         #print('--------------')
         #print(source)
         for m in self._RE_TEXT_BLOCK.finditer(source):
             self._str_block.append(StringBlock(m.group('BODY')))
+
+    def showPageString(self, font):
+        s = ''
+        for sb in self._str_block:
+            s += sb.editString(font)
+        print(s)
 #[EOF]

@@ -66,4 +66,7 @@ PDF Path:{}
         return self._TO_STR_FMT.format(p.resolve(), p.stat().st_size
                                      , self._pdf_version[0], self._pdf_version[1]
                                      , self._root.getPageCount())
+
+    def showPageString(self, page_no):
+        self._root.showPageString(1)
 #[EOF]

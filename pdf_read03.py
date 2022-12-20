@@ -10,4 +10,5 @@ if __name__ == '__main__':
 
     pdf = MyPDF(args.file_path)
     print(pdf.toString())
+    pdf.showPageString(1)
 #[EOF]

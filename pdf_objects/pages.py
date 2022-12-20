@@ -27,4 +27,7 @@ class PDFPages:
     def getPageCount(self):
         return self._count
 
+    def showPageString(self, page_no):
+        self._kids.showPageString(1)
+
 #[EOF]
