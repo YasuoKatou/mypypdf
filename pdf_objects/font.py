@@ -78,12 +78,12 @@ class PDFFont:
             e = int(m.group('END'), 16)
             l2 = m.group('LIST')
             codes = []
-            cs = ''
+            #cs = ''
             for m2 in self._RE_RANGE2_CODES.finditer(l2):
-                b = int(m2.group('CODE'), 16)
-                codes.append(b)
-                cs += chr(b)
+                codes.append(int(m2.group('CODE'), 16))
+                #cs += chr(b)
             #print('{:04x} {:04x} -> [{}]'.format(s, e, cs))
+            cmap_range[(s, e)] = codes
             c += 1
         if c != n:
             raise PDFRecordObjectsMissmatchException('[begin/end]range {} -> {}'.format(n, c))
@@ -99,7 +99,10 @@ class PDFFont:
         if f['CMapRange']:
             for c, v in f['CMapRange'].items():
                 if (c[0] <= code) and (code <= c[1]):
-                    return chr(code - c[0] + v)
+                    if isinstance(v, list):
+                        return chr(v[code - c[0]])
+                    else:
+                        return chr(code - c[0] + v)
 
         raise PDFKeywordNotFoundException('character {:04x} not found in /{}'.format(code, font_name))
         #return '.'
