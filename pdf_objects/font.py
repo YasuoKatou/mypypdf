@@ -33,60 +33,66 @@ class PDFFont:
         r = self._getCMapRange(s)
         return {'CMap1': o, 'CMapRange': r}
 
-    _RE_BFCHAR = re.compile(r'.*(?P<ITEM_NUM>\d+)\s+beginbfchar(?P<LIST>.*?)endbfchar.*', flags=re.MULTILINE | re.DOTALL)
+    _RE_BFCHAR = re.compile(r'^(?P<ITEM_NUM>\d+)\s+beginbfchar(?P<LIST>.*?)endbfchar$', flags=re.MULTILINE | re.DOTALL)
     _RE_1ON1_CODE = re.compile(r'^<(?P<SRC>[0-9A-Fa-f]+)>\s*<(?P<DIST>[0-9A-Fa-f]+)>$', flags=re.MULTILINE)
     def _getCMap1on1(self, source):
-        m = self._RE_BFCHAR.match(source)
-        if not m:
-            return None
         cmap_1on1 = {}
-        n = int(m.group('ITEM_NUM'))
-        l = m.group('LIST')
-        c = 0
-        for m in self._RE_1ON1_CODE.finditer(l):
-            s = int(m.group('SRC'), 16)
-            d = int(m.group('DIST'), 16)
-            #print('{:04x} -> {:04x} [{}]'.format(s, d, chr(d)))
-            cmap_1on1[s] = (d, chr(d))
-            c += 1
-        if c != n:
-            raise PDFRecordObjectsMissmatchException('[begin/end]bfchar {} -> {}'.format(n, c))
+        nt = 0
+        for m in self._RE_BFCHAR.finditer(source):
+            n = int(m.group('ITEM_NUM'))
+            l = m.group('LIST')
+            c = 0
+            for m in self._RE_1ON1_CODE.finditer(l):
+                s = int(m.group('SRC'), 16)
+                d = int(m.group('DIST'), 16)
+                #print('{:04x} -> {:04x} [{}]'.format(s, d, chr(d)))
+                cmap_1on1[s] = (d, chr(d))
+                c += 1
+            if c != n:
+                print(source)
+                raise PDFRecordObjectsMissmatchException('[begin/end]bfchar {} -> {}'.format(n, c))
+            nt += n
+        if nt == 0:
+            return None
         return cmap_1on1
 
-    _RE_BFRANGE = re.compile(r'.*(?P<ITEM_NUM>\d+)\s+beginbfrange(?P<LIST>.*?)endbfrange.*', flags=re.MULTILINE | re.DOTALL)
+    _RE_BFRANGE = re.compile(r'^(?P<ITEM_NUM>\d+)\s+beginbfrange(?P<LIST>.*?)endbfrange$', flags=re.MULTILINE | re.DOTALL)
     _RE_RANGE1_CODE = re.compile(r'^<(?P<START>[0-9A-Fa-f]+)>\s*<(?P<END>[0-9A-Fa-f]+)>\s*<(?P<BASE>[0-9A-Fa-f]+)>$', flags=re.MULTILINE)
     _RE_RANGE2_CODE = re.compile(r'^<(?P<START>[0-9A-Fa-f]+)>\s*<(?P<END>[0-9A-Fa-f]+)>\s*\[(?P<LIST>.*)\].*', flags=re.MULTILINE)
     _RE_RANGE2_CODES = re.compile(r'<(?P<CODE>[0-9A-Fa-f]+)>')
     def _getCMapRange(self, source):
-        m = self._RE_BFRANGE.match(source)
-        if not m:
-            return None
-        #print(m.group('LIST'))
         cmap_range = {}
-        n = int(m.group('ITEM_NUM'))
-        l = m.group('LIST')
-        c = 0
-        for m in self._RE_RANGE1_CODE.finditer(l):
-            s = int(m.group('START'), 16)
-            e = int(m.group('END'), 16)
-            b = int(m.group('BASE'), 16)
-            #print('{:04x} {:04x} -> {:04x} [{}]'.format(s, e, b, chr(b)))
-            cmap_range[(s, e)] = b
-            c += 1
-        for m in self._RE_RANGE2_CODE.finditer(l):
-            s = int(m.group('START'), 16)
-            e = int(m.group('END'), 16)
-            l2 = m.group('LIST')
-            codes = []
-            #cs = ''
-            for m2 in self._RE_RANGE2_CODES.finditer(l2):
-                codes.append(int(m2.group('CODE'), 16))
-                #cs += chr(b)
-            #print('{:04x} {:04x} -> [{}]'.format(s, e, cs))
-            cmap_range[(s, e)] = codes
-            c += 1
-        if c != n:
-            raise PDFRecordObjectsMissmatchException('[begin/end]range {} -> {}'.format(n, c))
+        nt = 0
+        for m in self._RE_BFRANGE.finditer(source):
+            #print(m.group('LIST'))
+            n = int(m.group('ITEM_NUM'))
+            l = m.group('LIST')
+            c = 0
+            for m in self._RE_RANGE1_CODE.finditer(l):
+                s = int(m.group('START'), 16)
+                e = int(m.group('END'), 16)
+                b = int(m.group('BASE'), 16)
+                #print('{:04x} {:04x} -> {:04x} [{}]'.format(s, e, b, chr(b)))
+                cmap_range[(s, e)] = b
+                c += 1
+            for m in self._RE_RANGE2_CODE.finditer(l):
+                s = int(m.group('START'), 16)
+                e = int(m.group('END'), 16)
+                l2 = m.group('LIST')
+                codes = []
+                #cs = ''
+                for m2 in self._RE_RANGE2_CODES.finditer(l2):
+                    codes.append(int(m2.group('CODE'), 16))
+                    #cs += chr(b)
+                #print('{:04x} {:04x} -> [{}]'.format(s, e, cs))
+                cmap_range[(s, e)] = codes
+                c += 1
+            if c != n:
+                print(source)
+                raise PDFRecordObjectsMissmatchException('[begin/end]range {} -> {}'.format(n, c))
+            nt += n
+        if nt == 0:
+            return None
         return cmap_range
 
     def getUtf8(self, font_name, code):
